@@ -3,9 +3,7 @@
 Centralized, reusable GitHub Actions workflows (`on: workflow_call`) shared across my repos.
 The real logic lives here once; each consuming repo keeps only a tiny **caller stub**.
 
-Reference: `ekawijayasusilo/shared_workflow`. This repo is **public**, so any repo can call
-these workflows. Callers track `@main` — whatever is on `main` here is live in every consuming
-repo instantly.
+Reference: Callers track `@main` — whatever is on `main` here is live in every consuming repo instantly.
 
 ## Reusable workflows
 
@@ -22,79 +20,19 @@ Third-party actions are **SHA-pinned** (opencode `anomalyco/opencode/github@10c8
 
 ## Caller stubs
 
-Drop these into a consuming repo's `.github/workflows/`. The `on:` trigger and `if:` guards
-**must** live in the stub — reusable workflows can't self-trigger. A `uses:` job may include
-`if:` / `secrets:` but must NOT have `steps:` or `runs-on:`.
+Ready-made stubs live in [`stubs/`](stubs/). Copy the one(s) you want into a consuming repo's
+`.github/workflows/` (same filename). Each already targets `@main` and passes the right secret.
 
-### `opencode.yml`
-```yaml
-name: opencode
-on:
-  issue_comment:
-    types: [created]
-  pull_request_review_comment:
-    types: [created]
-jobs:
-  opencode:
-    if: |
-      contains(github.event.comment.body, ' /oc') ||
-      startsWith(github.event.comment.body, '/oc') ||
-      contains(github.event.comment.body, ' /opencode') ||
-      startsWith(github.event.comment.body, '/opencode')
-    uses: ekawijayasusilo/shared_workflow/.github/workflows/opencode.reusable.yml@main
-    secrets:
-      OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
-```
+| Copy | calls | secret |
+| --- | --- | --- |
+| [`stubs/opencode.yml`](stubs/opencode.yml) | `opencode.reusable.yml` | `OPENCODE_API_KEY` |
+| [`stubs/opencode-review.yml`](stubs/opencode-review.yml) | `opencode-review.reusable.yml` | `OPENCODE_API_KEY` |
+| [`stubs/claude.yml`](stubs/claude.yml) | `claude.reusable.yml` | `CLAUDE_CODE_OAUTH_TOKEN` |
+| [`stubs/force-draft.yml`](stubs/force-draft.yml) _(optional — draft-by-default)_ | `force-draft.reusable.yml` | — |
 
-### `opencode-review.yml`
-```yaml
-name: opencode-review
-on:
-  pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
-jobs:
-  review:
-    if: github.event.pull_request.draft == false
-    uses: ekawijayasusilo/shared_workflow/.github/workflows/opencode-review.reusable.yml@main
-    secrets:
-      OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
-```
-
-### `claude.yml`
-```yaml
-name: Claude Code
-on:
-  issue_comment:
-    types: [created]
-  pull_request_review_comment:
-    types: [created]
-  issues:
-    types: [opened, assigned]
-  pull_request_review:
-    types: [submitted]
-jobs:
-  claude:
-    if: |
-      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
-      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
-      (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
-    uses: ekawijayasusilo/shared_workflow/.github/workflows/claude.reusable.yml@main
-    secrets:
-      CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-```
-
-### `force-draft.yml` (optional — only in repos that want draft-by-default)
-```yaml
-name: force-draft
-on:
-  pull_request:
-    types: [opened]
-jobs:
-  to-draft:
-    if: github.event.pull_request.draft == false
-    uses: ekawijayasusilo/shared_workflow/.github/workflows/force-draft.reusable.yml@main
-```
+The `on:` trigger and `if:` guards live in the stub — reusable workflows can't self-trigger. A
+`uses:` job may include `if:` / `secrets:` but must NOT have `steps:` or `runs-on:`. (These
+files sit in `stubs/`, not `.github/workflows/`, so they don't run here.)
 
 ## Per-repo setup (manual, once per consuming repo)
 

@@ -1,0 +1,10 @@
+name: force-draft
+
+on:
+  pull_request:
+    types: [opened]
+
+jobs:
+  to-draft:
+    if: github.event.pull_request.draft == false
+    uses: ekawijayasusilo/shared_workflow/.github/workflows/force-draft.reusable.yml@main
