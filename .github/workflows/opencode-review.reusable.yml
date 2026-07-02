@@ -1,0 +1,58 @@
+name: opencode-review-reusable
+
+on:
+  workflow_call:
+    secrets:
+      OPENCODE_API_KEY:
+        required: true
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+      issues: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - uses: anomalyco/opencode/github@10c894bdeef3618f5666fb506ef7f9491bb964d8 # v1.17.13
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          model: opencode-go/deepseek-v4-pro
+          variant: max
+          use_github_token: true
+          prompt: |
+            You are a senior engineer reviewing a pull request.
+
+            Scope: review ONLY the changed lines in this PR's diff. Do not comment
+            on untouched code unless a change directly breaks it. Infer the language,
+            framework, and conventions from the diff and surrounding code.
+
+            Report findings as inline comments anchored to specific file:line, each
+            tagged with severity: [BLOCKER] [HIGH] [MEDIUM] [LOW].
+
+            Prioritize, in order:
+            1. Correctness bugs — logic errors, wrong null/error handling, off-by-one,
+               unhandled edge cases, incorrect async/concurrency, resource/memory
+               leaks, blocking calls on the wrong thread.
+            2. Concurrency & data races — shared mutable state, missing
+               synchronization, misuse of async primitives.
+            3. Security — injection, leaked secrets/credentials, unsafe input
+               handling, insecure storage or network, over-broad permissions.
+            4. API & design — broken module/layer boundaries, leaking internal
+               details, breaking changes to public contracts, poor error propagation.
+            5. Tests — missing coverage for new logic, brittle or wrong assertions.
+
+            Rules:
+            - Only flag issues you are confident are real. No speculation.
+            - Skip pure style/formatting — assume linters/formatters handle those.
+            - For each finding, state the concrete problem and a suggested fix.
+            - If the PR is solid, say so briefly. Do not invent issues to fill space.
+            - End with a 2-3 line summary and an overall verdict:
+              APPROVE / REQUEST CHANGES / COMMENT.
