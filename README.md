@@ -4,7 +4,7 @@ Centralized, reusable GitHub Actions workflows (`on: workflow_call`) shared acro
 The real logic lives here once; each consuming repo keeps only a tiny **caller stub**.
 
 Reference: `ekawijayasusilo/shared_workflow`. This repo is **public**, so any repo can call
-these workflows. Callers track `@main` (always latest).
+these workflows. Callers pin the `@v1` tag.
 
 ## Reusable workflows
 
@@ -38,7 +38,7 @@ jobs:
       startsWith(github.event.comment.body, '/oc') ||
       contains(github.event.comment.body, ' /opencode') ||
       startsWith(github.event.comment.body, '/opencode')
-    uses: ekawijayasusilo/shared_workflow/.github/workflows/opencode.reusable.yml@main
+    uses: ekawijayasusilo/shared_workflow/.github/workflows/opencode.reusable.yml@v1
     secrets:
       OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
 ```
@@ -52,7 +52,7 @@ on:
 jobs:
   review:
     if: github.event.pull_request.draft == false
-    uses: ekawijayasusilo/shared_workflow/.github/workflows/opencode-review.reusable.yml@main
+    uses: ekawijayasusilo/shared_workflow/.github/workflows/opencode-review.reusable.yml@v1
     secrets:
       OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
 ```
@@ -66,7 +66,7 @@ on:
 jobs:
   to-draft:
     if: github.event.pull_request.draft == false
-    uses: ekawijayasusilo/shared_workflow/.github/workflows/force-draft.reusable.yml@main
+    uses: ekawijayasusilo/shared_workflow/.github/workflows/force-draft.reusable.yml@v1
 ```
 
 ## Per-repo setup (manual, once per consuming repo)
@@ -86,6 +86,12 @@ jobs:
 
 ## Versioning
 
-Callers track `@main`, so any merge to `main` reaches every consumer immediately. Keep `main`
-green; the opencode action inside is SHA-pinned so behavior only changes on a deliberate edit
-(or a merged Dependabot bump).
+Callers pin the moving `@v1` tag. To release a change, land it on the repo's default branch
+and move the tag:
+
+```bash
+git tag -f v1 && git push -f origin v1
+```
+
+The opencode action inside is SHA-pinned, so behavior only changes on a deliberate edit (or a
+merged Dependabot bump).
