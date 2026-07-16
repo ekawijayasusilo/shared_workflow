@@ -1,0 +1,13 @@
+name: opencode-doc-management
+
+on:
+  schedule:
+    # Weekly, Monday 02:00 UTC. Note: GitHub only runs scheduled workflows
+    # from the default branch. Adjust cadence as needed.
+    - cron: "0 2 * * 1"
+
+jobs:
+  doc-management:
+    uses: ekawijayasusilo/shared_workflow/.github/workflows/opencode-doc-management.reusable.yml@main
+    secrets:
+      OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}

@@ -1,0 +1,67 @@
+name: opencode-doc-management-reusable
+
+on:
+  workflow_call:
+    inputs:
+      prompt:
+        description: Override the default docs-sync prompt (optional)
+        type: string
+        required: false
+        default: ""
+    secrets:
+      OPENCODE_API_KEY:
+        required: true
+
+jobs:
+  doc-management:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+      pull-requests: write
+      issues: write
+    env:
+      DEFAULT_PROMPT: |
+        You are maintaining this repository's documentation.
+
+        Task: bring the documentation in line with the current state of the code.
+
+        1. Identify the documentation surface: README(s), docs/ folders,
+           CHANGELOG, setup/usage guides.
+        2. Review recent changes: use git log and gh to inspect commits and
+           merged PRs since the docs were last touched.
+        3. Find documentation that those changes made stale, wrong, or missing:
+           - features added/changed/removed but not reflected in docs
+           - setup steps, commands, flags, or config that no longer match
+           - broken links or references to renamed/moved files
+        4. Apply focused edits to fix what you found. Keep the existing tone
+           and structure; do not rewrite docs wholesale, and do not invent
+           documentation for areas that were never documented unless a recent
+           change made it necessary.
+        5. If everything is already in sync, make no changes and say so.
+
+        The compound-engineering skills (ce-*) are available; use them when
+        they help, e.g. ce-doc-review to sanity-check a reworked document.
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # Full history so the agent can inspect commits since the last docs sync.
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: anomalyco/opencode/github@10c894bdeef3618f5666fb506ef7f9491bb964d8 # v1.17.13
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Merged on top of global + project config ("local" scope), so a
+          # consumer repo's own opencode.json still applies. Unpinned on
+          # purpose: every run picks up the latest plugin from its default branch.
+          OPENCODE_CONFIG_CONTENT: |
+            {
+              "plugin": ["compound-engineering@git+https://github.com/EveryInc/compound-engineering-plugin.git"]
+            }
+        with:
+          model: opencode-go/deepseek-v4-pro
+          variant: max
+          use_github_token: true
+          prompt: ${{ inputs.prompt != '' && inputs.prompt || env.DEFAULT_PROMPT }}

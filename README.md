@@ -11,6 +11,7 @@ Reference: Callers track `@main` — whatever is on `main` here is live in every
 | --- | --- |
 | `.github/workflows/opencode.reusable.yml` | Comment-triggered opencode assistant. Makes changes / answers when a comment contains `/oc` or `/opencode`. Needs write perms. |
 | `.github/workflows/opencode-review.reusable.yml` | Automatic PR reviewer. Runs opencode with a universal review prompt and posts inline review comments. |
+| `.github/workflows/opencode-doc-management.reusable.yml` | Scheduled docs maintainer. Runs opencode with the [compound-engineering plugin](https://github.com/EveryInc/compound-engineering-plugin) loaded (latest, via `OPENCODE_CONFIG_CONTENT`), syncs stale docs with recent code changes, and auto-opens a PR with the edits. Optional `prompt` input overrides the default task. |
 | `.github/workflows/claude.reusable.yml` | Claude Code assistant. Runs `anthropics/claude-code-action` when an issue/PR/comment/review mentions `@claude`. |
 | `.github/workflows/force-draft.reusable.yml` | Flips any PR opened as "ready" back to **draft**, making draft the effective default. Pairs with the reviewer's `draft == false` guard so review only runs once a PR is marked ready. |
 
@@ -27,6 +28,7 @@ Ready-made stubs live in [`stubs/`](stubs/). Copy the one(s) you want into a con
 | --- | --- | --- |
 | [`stubs/opencode.yml`](stubs/opencode.yml) | `opencode.reusable.yml` | `OPENCODE_API_KEY` |
 | [`stubs/opencode-review.yml`](stubs/opencode-review.yml) | `opencode-review.reusable.yml` | `OPENCODE_API_KEY` |
+| [`stubs/opencode-doc-management.yml`](stubs/opencode-doc-management.yml) | `opencode-doc-management.reusable.yml` | `OPENCODE_API_KEY` |
 | [`stubs/claude.yml`](stubs/claude.yml) | `claude.reusable.yml` | `CLAUDE_CODE_OAUTH_TOKEN` |
 | [`stubs/force-draft.yml`](stubs/force-draft.yml) _(optional — draft-by-default)_ | `force-draft.reusable.yml` | — |
 
