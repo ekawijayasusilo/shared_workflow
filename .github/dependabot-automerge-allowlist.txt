@@ -1,0 +1,6 @@
+# Dependencies that Dependabot may auto-merge without manual review.
+# One dependency name per line, exactly as it appears in the workflow `uses:` reference
+# (without the version). Lines starting with # and blank lines are ignored.
+anomalyco/opencode/github
+anthropics/claude-code-action
+actions/checkout
