@@ -1,4 +1,4 @@
-name: opencode-review-reusable
+name: opencode-simplify-reusable
 
 on:
   workflow_call:
@@ -6,8 +6,12 @@ on:
       OPENCODE_API_KEY:
         required: true
 
+concurrency:
+  group: opencode-simplify-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
 jobs:
-  review:
+  simplify:
     # Fork PRs and bot-authored PRs (e.g. Dependabot) run without repository
     # secrets, so the action would start with no usable OPENCODE_API_KEY.
     if: >
@@ -20,8 +24,12 @@ jobs:
       pull-requests: write
       issues: write
     steps:
+      # PR head (not the detached merge ref) with full history, so the
+      # ce-simplify-code skill can resolve its merge-base..HEAD scope (RFC 0002 §3.6).
       - uses: actions/checkout@v7
         with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
           persist-credentials: false
 
       # Prompts live in shared_workflow's prompts/, but this reusable workflow
@@ -32,7 +40,7 @@ jobs:
         id: prompt
         run: |
           curl -fsSL --retry 3 -o "$RUNNER_TEMP/prompt.md" \
-            https://raw.githubusercontent.com/ekawijayasusilo/shared_workflow/main/prompts/opencode-review.md
+            https://raw.githubusercontent.com/ekawijayasusilo/shared_workflow/main/prompts/opencode-simplify.md
           test -s "$RUNNER_TEMP/prompt.md"
           { echo 'text<<PROMPT_EOF'; cat "$RUNNER_TEMP/prompt.md"; echo 'PROMPT_EOF'; } >> "$GITHUB_OUTPUT"
 
@@ -42,7 +50,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Merged on top of global + project config ("local" scope), so a
           # consumer repo's own opencode.json still applies. Unpinned on
-          # purpose: every run picks up the latest plugin (RFC 0001 §3.3).
+          # purpose: every run picks up the latest plugin (RFC 0002 §3.7).
           OPENCODE_CONFIG_CONTENT: |
             {
               "plugin": ["compound-engineering@git+https://github.com/EveryInc/compound-engineering-plugin.git"]

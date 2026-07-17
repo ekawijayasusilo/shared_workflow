@@ -11,9 +11,15 @@ Reference: Callers track `@main` — whatever is on `main` here is live in every
 | --- | --- |
 | `.github/workflows/opencode.reusable.yml` | Comment-triggered opencode assistant. Makes changes / answers when a comment contains `/oc` or `/opencode`. Needs write perms. |
 | `.github/workflows/opencode-review.reusable.yml` | Automatic PR reviewer. Triages each PR (report-only): complex/risky changes get a deep multi-agent review via the compound-engineering `ce-code-review` skill (`mode:agent`), simple ones a lean direct review; posts inline comments + a summary verdict. Skips draft, fork, and bot PRs. See [RFC 0001](docs/rfc/0001-opencode-review-ce-code-review-triage.md). |
+| `.github/workflows/opencode-simplify.reusable.yml` | PR simplification suggester. Runs the compound-engineering `ce-simplify-code` skill on the PR diff (local-apply only — nothing is pushed) and posts the result as one COMMENT review with one-click ` ```suggestion ` blocks, max 10 total. Skips draft, fork, and bot PRs. See [RFC 0002](docs/rfc/0002-opencode-simplify-suggestions.md). |
 | `.github/workflows/opencode-doc-management.reusable.yml` | Scheduled docs maintainer. Runs opencode with the [compound-engineering plugin](https://github.com/EveryInc/compound-engineering-plugin) loaded (latest, via `OPENCODE_CONFIG_CONTENT`), syncs stale docs with recent code changes, and auto-opens a PR with the edits. Optional `prompt` input overrides the default task. |
 | `.github/workflows/claude.reusable.yml` | Claude Code assistant. Runs `anthropics/claude-code-action` when an issue/PR/comment/review mentions `@claude`. |
 | `.github/workflows/force-draft.reusable.yml` | Flips any PR opened as "ready" back to **draft**, making draft the effective default. Pairs with the reviewer's `draft == false` guard so review only runs once a PR is marked ready. |
+
+Default prompts for the PR review and simplify workflows live in [`prompts/`](prompts/) as
+plain markdown; the reusable workflows fetch them from `main` at runtime (they run in the
+caller's checkout, so the files aren't on disk). Editing a prompt file changes behavior on
+the next run — no workflow change needed.
 
 Third-party actions are **SHA-pinned** (opencode `anomalyco/opencode/github@10c894b…` =
 `v1.17.13`; `anthropics/claude-code-action@6c0083b…` = `v1.0.162`); Dependabot
@@ -28,6 +34,7 @@ Ready-made stubs live in [`stubs/`](stubs/). Copy the one(s) you want into a con
 | --- | --- | --- |
 | [`stubs/opencode.yml`](stubs/opencode.yml) | `opencode.reusable.yml` | `OPENCODE_API_KEY` |
 | [`stubs/opencode-review.yml`](stubs/opencode-review.yml) | `opencode-review.reusable.yml` | `OPENCODE_API_KEY` |
+| [`stubs/opencode-simplify.yml`](stubs/opencode-simplify.yml) | `opencode-simplify.reusable.yml` | `OPENCODE_API_KEY` |
 | [`stubs/claude.yml`](stubs/claude.yml) | `claude.reusable.yml` | `CLAUDE_CODE_OAUTH_TOKEN` |
 | [`stubs/force-draft.yml`](stubs/force-draft.yml) _(optional — draft-by-default)_ | `force-draft.reusable.yml` | — |
 
