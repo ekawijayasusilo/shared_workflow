@@ -5,13 +5,22 @@ on:
 
 jobs:
   to-draft:
+    # Fork PRs get a read-only token, so the draft mutation would fail there.
+    if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       pull-requests: write
     steps:
       - uses: actions/github-script@v9
         with:
           script: |
-            await github.graphql(`mutation($id:ID!){
-              convertPullRequestToDraft(input:{pullRequestId:$id}){clientMutationId}
-            }`, { id: context.payload.pull_request.node_id })
+            try {
+              await github.graphql(`mutation($id:ID!){
+                convertPullRequestToDraft(input:{pullRequestId:$id}){clientMutationId}
+              }`, { id: context.payload.pull_request.node_id })
+            } catch (e) {
+              // Only the benign already-draft race is safe to ignore.
+              if (!/already.*draft/i.test(e.message)) throw e;
+              core.info(`PR already draft; nothing to do (${e.message})`);
+            }

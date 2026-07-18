@@ -4,7 +4,11 @@ on:
   workflow_call:
     secrets:
       OPENCODE_API_KEY:
-        required: true
+        required: false
+
+concurrency:
+  group: opencode-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 jobs:
   review:
@@ -15,6 +19,7 @@ jobs:
       github.event.pull_request.head.repo.full_name == github.repository &&
       github.event.pull_request.user.type != 'Bot'
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       contents: read
       pull-requests: write
@@ -24,19 +29,29 @@ jobs:
         with:
           persist-credentials: false
 
+      # The job guard reads the frozen event payload; re-check live draft state
+      # so a PR converted to draft after `opened` (force-draft) skips the agent run.
+      - name: Re-check draft state
+        id: draftcheck
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: echo "is_draft=$(gh pr view ${{ github.event.pull_request.number }} --json isDraft -q .isDraft)" >> "$GITHUB_OUTPUT"
+
       # Prompts live in shared_workflow's prompts/, but this reusable workflow
       # runs in the caller's context (checkout above is the consumer repo), so
       # the prompt is fetched at runtime. Fetched from main by design — callers
       # track @main. $RUNNER_TEMP keeps the reviewed workspace clean.
       - name: Load prompt
+        if: steps.draftcheck.outputs.is_draft == 'false'
         id: prompt
         run: |
-          curl -fsSL --retry 3 -o "$RUNNER_TEMP/prompt.md" \
+          curl -fsSL --retry 3 --max-time 30 --connect-timeout 10 -o "$RUNNER_TEMP/prompt.md" \
             https://raw.githubusercontent.com/ekawijayasusilo/shared_workflow/main/prompts/opencode-review.md
           test -s "$RUNNER_TEMP/prompt.md"
           { echo 'text<<PROMPT_EOF'; cat "$RUNNER_TEMP/prompt.md"; echo 'PROMPT_EOF'; } >> "$GITHUB_OUTPUT"
 
       - uses: anomalyco/opencode/github@70b56a0a93d366889cae950379cc9d2537148fa2 # v1.18.2
+        if: steps.draftcheck.outputs.is_draft == 'false'
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

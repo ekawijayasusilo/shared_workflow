@@ -21,8 +21,8 @@ plain markdown; the reusable workflows fetch them from `main` at runtime (they r
 caller's checkout, so the files aren't on disk). Editing a prompt file changes behavior on
 the next run — no workflow change needed.
 
-Third-party actions are **SHA-pinned** (opencode `anomalyco/opencode/github@10c894b…` =
-`v1.17.13`; `anthropics/claude-code-action@6c0083b…` = `v1.0.162`); Dependabot
+Third-party actions are **SHA-pinned** (opencode `anomalyco/opencode/github@70b56a0a…` =
+`v1.18.2`; `anthropics/claude-code-action@1298632c…` = `v1.0.175`); Dependabot
 (`.github/dependabot.yml`) opens weekly bump PRs.
 
 ## Caller stubs
@@ -54,7 +54,7 @@ files sit in `stubs/`, not `.github/workflows/`, so they don't run here.)
 2. **Add the secrets** (`GITHUB_TOKEN` is automatic — never set it). Add only the ones whose
    stubs you copied:
    ```bash
-   gh secret set OPENCODE_API_KEY --repo OWNER/REPO        # opencode + opencode-review
+   gh secret set OPENCODE_API_KEY --repo OWNER/REPO        # opencode + opencode-review + opencode-simplify
    gh secret set CLAUDE_CODE_OAUTH_TOKEN --repo OWNER/REPO # claude
    ```
 3. Copy in the caller stub(s) above.
