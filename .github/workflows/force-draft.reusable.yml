@@ -5,8 +5,11 @@ on:
 
 jobs:
   to-draft:
-    # Fork PRs get a read-only token, so the draft mutation would fail there.
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    # Fork and bot-authored PRs can receive a read-only token, so the draft
+    # mutation is limited to same-repository human PRs.
+    if: >
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.user.type != 'Bot'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:

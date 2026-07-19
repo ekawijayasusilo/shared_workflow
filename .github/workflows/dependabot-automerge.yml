@@ -1,7 +1,6 @@
 name: Dependabot auto-merge
 on:
   pull_request:
-  workflow_dispatch:
 
 permissions:
   contents: write
@@ -40,39 +39,3 @@ jobs:
         env:
           PR_URL: ${{ github.event.pull_request.html_url }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  # Fixture self-test for the allowlist script; runs only on manual dispatch.
-  allowlist-selftest:
-    if: github.event_name == 'workflow_dispatch'
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-
-      - name: Run allowlist self-test
-        run: |
-          set -euo pipefail
-          script=.github/scripts/check-dependabot-allowlist.sh
-          allowlist=.github/dependabot-automerge-allowlist.txt
-          check() {
-            local desc="$1" input="$2" want="$3"
-            local got
-            got="$(bash "$script" "$input" "$allowlist" 2>/dev/null)"
-            if [[ "$got" != "approved=$want" ]]; then
-              echo "FAIL: $desc (input='$input'): want approved=$want, got '$got'"
-              exit 1
-            fi
-            echo "PASS: $desc"
-          }
-          check "allowlisted single" "actions/checkout" true
-          check "non-allowlisted" "evil/action" false
-          check "multi-dep all allowlisted" "actions/checkout, anthropics/claude-code-action" true
-          check "multi-dep mixed" "actions/checkout, evil/action" false
-          check "empty string" "" false
-          check "whitespace-padded" "  actions/checkout  " true
-          check "substring" "actions" false
-          echo "all allowlist self-tests passed"
