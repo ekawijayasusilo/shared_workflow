@@ -9,17 +9,19 @@ on:
 jobs:
   claude:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
-      contents: read
-      pull-requests: read
-      issues: read
+      contents: write
+      pull-requests: write
+      issues: write
       id-token: write
       actions: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
-          fetch-depth: 1
+          # The Claude action installs its own GitHub App token before pushing.
+          persist-credentials: false
 
       - name: Run Claude Code
         id: claude

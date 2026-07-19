@@ -2,6 +2,8 @@ name: opencode-review
 
 on:
   pull_request:
+    # If force-draft.yml is also installed, remove `opened`; `ready_for_review`
+    # becomes the initial review trigger and avoids a cross-workflow race.
     types: [opened, synchronize, reopened, ready_for_review]
 
 jobs:

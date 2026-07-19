@@ -1,0 +1,30 @@
+name: lint
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  actionlint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      # actionlint pinned to v1.7.12; the download script takes the version
+      # without the leading "v" and requires the install dir to exist.
+      - name: Install actionlint
+        run: |
+          mkdir -p "$RUNNER_TEMP/bin"
+          curl -fsSL "https://raw.githubusercontent.com/rhysd/actionlint/v1.7.12/scripts/download-actionlint.bash" | bash -s "1.7.12" "$RUNNER_TEMP/bin"
+
+      # Stubs are caller templates consumers copy; they must lint clean too.
+      - name: Lint workflows
+        run: |
+          "$RUNNER_TEMP/bin/actionlint" .github/workflows/*.yml stubs/*.yml

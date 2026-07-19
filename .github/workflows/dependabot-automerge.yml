@@ -1,5 +1,6 @@
 name: Dependabot auto-merge
-on: pull_request
+on:
+  pull_request:
 
 permissions:
   contents: write
@@ -8,6 +9,7 @@ permissions:
 jobs:
   dependabot:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     if: github.event.pull_request.user.login == 'dependabot[bot]' && github.repository == 'ekawijayasusilo/shared_workflow'
     steps:
       - name: Dependabot metadata
@@ -23,23 +25,13 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.base.ref }}
 
+      # Like the allowlist, the script is read from the base-branch checkout,
+      # so the PR being evaluated cannot weaken the check it is judged by.
       - name: Check all updated dependencies against allowlist
         id: allowlist
         env:
           DEPENDENCY_NAMES: ${{ steps.metadata.outputs.dependency-names }}
-        run: |
-          approved=true
-          IFS=',' read -ra deps <<< "$DEPENDENCY_NAMES"
-          for dep in "${deps[@]}"; do
-            dep="$(echo "$dep" | xargs)"
-            if grep -Fxq "$dep" <(grep -v '^\s*#' .github/dependabot-automerge-allowlist.txt | sed 's/\s*$//' | sed '/^$/d'); then
-              echo "allowed: $dep"
-            else
-              echo "not allowlisted: $dep"
-              approved=false
-            fi
-          done
-          echo "approved=$approved" >> "$GITHUB_OUTPUT"
+        run: bash .github/scripts/check-dependabot-allowlist.sh "$DEPENDENCY_NAMES" .github/dependabot-automerge-allowlist.txt >> "$GITHUB_OUTPUT"
 
       - name: Enable auto-merge
         if: steps.allowlist.outputs.approved == 'true'

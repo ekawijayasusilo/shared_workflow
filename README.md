@@ -14,16 +14,15 @@ Reference: Callers track `@main` — whatever is on `main` here is live in every
 | `.github/workflows/opencode-simplify.reusable.yml` | PR simplification suggester. Runs the compound-engineering `ce-simplify-code` skill on the PR diff (local-apply only — nothing is pushed) and posts the result as one COMMENT review with one-click ` ```suggestion ` blocks, max 10 total. Skips draft, fork, and bot PRs. See [RFC 0002](docs/rfc/0002-opencode-simplify-suggestions.md). |
 | `.github/workflows/opencode-doc-management.reusable.yml` | Scheduled docs maintainer. Runs opencode with the [compound-engineering plugin](https://github.com/EveryInc/compound-engineering-plugin) loaded (latest, via `OPENCODE_CONFIG_CONTENT`), syncs stale docs with recent code changes, and auto-opens a PR with the edits. Optional `prompt` input overrides the default task. |
 | `.github/workflows/claude.reusable.yml` | Claude Code assistant. Runs `anthropics/claude-code-action` when an issue/PR/comment/review mentions `@claude`. |
-| `.github/workflows/force-draft.reusable.yml` | Flips any PR opened as "ready" back to **draft**, making draft the effective default. Pairs with the reviewer's `draft == false` guard so review only runs once a PR is marked ready. |
+| `.github/workflows/force-draft.reusable.yml` | Flips same-repository, human-authored PRs opened as "ready" back to **draft**, making draft the effective default. Fork and bot-authored PRs are skipped. Pairs with the reviewer's `draft == false` guard so review only runs once a PR is marked ready. |
 
 Default prompts for the PR review and simplify workflows live in [`prompts/`](prompts/) as
 plain markdown; the reusable workflows fetch them from `main` at runtime (they run in the
 caller's checkout, so the files aren't on disk). Editing a prompt file changes behavior on
 the next run — no workflow change needed.
 
-Third-party actions are **SHA-pinned** (opencode `anomalyco/opencode/github@10c894b…` =
-`v1.17.13`; `anthropics/claude-code-action@6c0083b…` = `v1.0.162`); Dependabot
-(`.github/dependabot.yml`) opens weekly bump PRs.
+Third-party actions are **SHA-pinned**; Dependabot (`.github/dependabot.yml`) opens weekly
+bump PRs to keep them current.
 
 ## Caller stubs
 
@@ -54,7 +53,7 @@ files sit in `stubs/`, not `.github/workflows/`, so they don't run here.)
 2. **Add the secrets** (`GITHUB_TOKEN` is automatic — never set it). Add only the ones whose
    stubs you copied:
    ```bash
-   gh secret set OPENCODE_API_KEY --repo OWNER/REPO        # opencode + opencode-review
+   gh secret set OPENCODE_API_KEY --repo OWNER/REPO        # opencode + opencode-review + opencode-simplify
    gh secret set CLAUDE_CODE_OAUTH_TOKEN --repo OWNER/REPO # claude
    ```
 3. Copy in the caller stub(s) above.
