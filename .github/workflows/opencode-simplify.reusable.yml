@@ -63,7 +63,7 @@ jobs:
           test -s "$RUNNER_TEMP/prompt.md"
           { echo 'text<<PROMPT_EOF'; cat "$RUNNER_TEMP/prompt.md"; echo 'PROMPT_EOF'; } >> "$GITHUB_OUTPUT"
 
-      - uses: anomalyco/opencode/github@70b56a0a93d366889cae950379cc9d2537148fa2 # v1.18.2
+      - uses: anomalyco/opencode/github@49c69c5ed3ccf706b61b3febb43c8aaff7f8325e # v1.18.4
         if: steps.draftcheck.outputs.is_draft == 'false'
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
