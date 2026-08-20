@@ -14,7 +14,6 @@ Reference: Callers track `@main` — whatever is on `main` here is live in every
 | `.github/workflows/opencode-simplify.reusable.yml` | PR simplification suggester. Runs the compound-engineering `ce-simplify-code` skill on the PR diff (local-apply only — nothing is pushed) and posts the result as one COMMENT review with one-click ` ```suggestion ` blocks, max 10 total. Skips draft, fork, and bot PRs. See [RFC 0002](docs/rfc/0002-opencode-simplify-suggestions.md). |
 | `.github/workflows/opencode-doc-management.reusable.yml` | Scheduled docs maintainer. Runs opencode with the [compound-engineering plugin](https://github.com/EveryInc/compound-engineering-plugin) loaded (latest, via `OPENCODE_CONFIG_CONTENT`), syncs stale docs with recent code changes, and auto-opens a PR with the edits. Optional `prompt` input overrides the default task. |
 | `.github/workflows/claude.reusable.yml` | Claude Code assistant. Runs `anthropics/claude-code-action` when an issue/PR/comment/review mentions `@claude`. |
-| `.github/workflows/force-draft.reusable.yml` | Flips same-repository, human-authored PRs opened as "ready" back to **draft**, making draft the effective default. Fork and bot-authored PRs are skipped. Pairs with the reviewer's `draft == false` guard so review only runs once a PR is marked ready. |
 
 Default prompts for the PR review and simplify workflows live in [`prompts/`](prompts/) as
 plain markdown; the reusable workflows fetch them from `main` at runtime (they run in the
@@ -35,7 +34,6 @@ Ready-made stubs live in [`stubs/`](stubs/). Copy the one(s) you want into a con
 | [`stubs/opencode-review.yml`](stubs/opencode-review.yml) | `opencode-review.reusable.yml` | `OPENCODE_API_KEY` |
 | [`stubs/opencode-simplify.yml`](stubs/opencode-simplify.yml) | `opencode-simplify.reusable.yml` | `OPENCODE_API_KEY` |
 | [`stubs/claude.yml`](stubs/claude.yml) | `claude.reusable.yml` | `CLAUDE_CODE_OAUTH_TOKEN` |
-| [`stubs/force-draft.yml`](stubs/force-draft.yml) _(optional — draft-by-default)_ | `force-draft.reusable.yml` | — |
 
 The `on:` trigger and `if:` guards live in the stub — reusable workflows can't self-trigger. A
 `uses:` job may include `if:` / `secrets:` but must NOT have `steps:` or `runs-on:`. (These
@@ -63,3 +61,10 @@ files sit in `stubs/`, not `.github/workflows/`, so they don't run here.)
 Callers track `@main`, so any merge to `main` is live in every consumer immediately. Keep
 `main` green (protect it with required PR review once ready). The third-party actions inside
 are SHA-pinned, so behavior only changes on a deliberate edit or a merged Dependabot bump.
+
+## Todo
+
+[ ] Migrate to renovate bot and create custom update rul to handle autoupdate on LLM model version, based on OpenCode model registry.
+[ ] Create Github app for this repo (CodeDayCare) to enable named bot to post the code review & for security purposes (limited time repo write token instead of manual Github PAT setup on consumer repo secret).
+[ ] Reorganize proiject structure and abstract workflow & name better to decouple from real implementation (opencode, ocr).
+[ ] Support reasoning-effort/variant for ocr. Central config wires `variant` for the opencode workflows but ocr ignores it — ocr uses the model's default. To add: pass `llm_extra_body: {"reasoning_effort":"high|max"}` (deepseek-v4-pro accepts high/max on the opencode zen endpoint).

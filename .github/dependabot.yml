@@ -4,3 +4,7 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    # Wait 1 week after a release before opening a bump PR (avoids same-day
+    # bad releases; also gates the ocr CLI, now pinned via the action SHA).
+    cooldown:
+      default-days: 7

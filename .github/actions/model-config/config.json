@@ -1,0 +1,12 @@
+{
+  "opencode": {
+    "model": "opencode-go/deepseek-v4-pro",
+    "variant": "max",
+    "plugin": "compound-engineering@git+https://github.com/EveryInc/compound-engineering-plugin.git"
+  },
+  "ocr": {
+    "llm_url": "https://opencode.ai/zen/go/v1/chat/completions",
+    "llm_model": "deepseek-v4-pro",
+    "llm_use_anthropic": "false"
+  }
+}
