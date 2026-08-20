@@ -199,9 +199,3 @@ An external AI review of v1 produced 1 BLOCKER, 7 SHOULD-FIX, and 1 NIT. Resolut
 | S6: 10-inline cap doesn't bound total noise | **Accepted.** Cap is now 10 suggestions total; overflow reported as a count only; everything submitted as one COMMENT review |
 | S7: verification plan missed declared paths | **Accepted.** Fixtures added: clean PR, overflow PR, multi-line routing, rapid pushes, rerun dedup (§6) |
 | N1: action SHA doesn't pin the opencode runtime | **Accepted.** Documented as the second deliberately floating dependency (§3.7) |
-
-## 8. Related and future work (out of scope here)
-
-- RFC 0001 (approved, implemented): triage-based PR review — the sibling workflow this one complements.
-- Scheduled docs maintenance workflow already exists (`opencode-doc-management.reusable.yml`).
-- Still planned, each with its own RFC: PR autoheal (max 3 attempts), and a placeholder for auto-updating/closing GitHub issues referenced by merged PRs.

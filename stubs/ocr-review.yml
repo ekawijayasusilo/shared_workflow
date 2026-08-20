@@ -1,0 +1,18 @@
+name: ocr-review
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  review:
+    if: github.event.pull_request.draft == false
+    uses: ekawijayasusilo/shared_workflow/.github/workflows/ocr-review.reusable.yml@main
+    with:
+      # Optional per-repo failover overrides. Set repo Variables OCR_LLM_URL /
+      # OCR_LLM_MODEL in Settings to switch provider/model without editing a
+      # file; leave unset to use shared_workflow's central default.
+      llm_url: ${{ vars.OCR_LLM_URL }}
+      llm_model: ${{ vars.OCR_LLM_MODEL }}
+    secrets:
+      OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}

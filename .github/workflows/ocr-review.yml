@@ -1,4 +1,4 @@
-name: opencode-review
+name: ocr-review
 
 on:
   pull_request:
@@ -7,6 +7,9 @@ on:
 jobs:
   review:
     if: github.event.pull_request.draft == false
-    uses: ekawijayasusilo/shared_workflow/.github/workflows/opencode-review.reusable.yml@main
+    uses: ekawijayasusilo/shared_workflow/.github/workflows/ocr-review.reusable.yml@main
+    with:
+      llm_url: ${{ vars.OCR_LLM_URL }}
+      llm_model: ${{ vars.OCR_LLM_MODEL }}
     secrets:
       OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
