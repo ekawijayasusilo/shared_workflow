@@ -1,6 +1,6 @@
 # RFC 0001: Triage-based PR review with `ce-code-review` in the opencode review workflow
 
-- **Status:** Approved — implemented 2026-07-16
+- **Status:** Approved — implemented 2026-07-16; superseded by [RFC 0003](0003-opencode-ocr-review-replacement.md) (2026-08-20), which replaces this reviewer with Alibaba open-code-review (ocr)
 - **Date:** 2026-07-16
 - **Authors:** Eka Wijaya Susilo (requirements, decisions), Claude (research, drafting)
 - **Reviewers:** AI review pass completed 2026-07-16; all findings resolved in v2 (see Section 7)
@@ -213,12 +213,3 @@ An external AI review of v1 produced 3 BLOCKER and 6 SHOULD-FIX findings. Resolu
 | S4: triage categories overlap; borderline bias under-reviews risk | **Accepted (modified).** Semantic triggers now take precedence regardless of size; "prefer SIMPLE" survives only for pure-size borderline with no semantic trigger |
 | S5: no severity→verdict mapping; non-anchorable findings undefined | **Accepted.** P0/P1 → REQUEST CHANGES, P2/P3-only → COMMENT, APPROVE only when clean; non-anchorable findings go in the summary comment |
 | S6: verification doesn't assert the full non-mutation invariant | **Declined by user** (same rationale as B2); verification keeps the no-pushed-commits check |
-
-## 8. Related and future work (out of scope here)
-
-Planned as separate workflows, each to get its own RFC:
-
-- Docs update automation after PR merge (an `opencode-doc-management.reusable.yml` scheduled workflow already exists as a first step).
-- A PR-comment workflow suggesting how the PR's changes could be simplified (`ce-simplify-code`, report-only).
-- A PR autoheal workflow (max 3 attempts, then give up).
-- A placeholder workflow for auto-updating/closing GitHub issues referenced by merged PRs (design not settled).

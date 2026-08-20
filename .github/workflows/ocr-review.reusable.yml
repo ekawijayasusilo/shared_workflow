@@ -1,0 +1,81 @@
+name: ocr-review-reusable
+
+# Alibaba open-code-review (ocr) as a reusable PR reviewer. The ocr action
+# self-handles checkout, install, diff selection, review, and comment posting,
+# so this workflow is a thin wrapper: guards + centralized provider config.
+#
+# Provider config (url/model/use_anthropic) is centralized here as input
+# DEFAULTS — one edit propagates to every consumer. Reuses the existing
+# OPENCODE_API_KEY secret: the endpoint is opencode zen, so that same key is
+# ocr's bearer token — no new consumer secret to add.
+
+on:
+  workflow_call:
+    # url/model are optional overrides. Empty (input omitted, or the consumer's
+    # `vars.OCR_LLM_*` is unset) falls back to the CENTRAL default in the action
+    # step below. A consumer can override per-repo from its Settings page
+    # (Variables) without editing any file — handy to fail over fast if the
+    # provider is down. (Reusable workflows read `vars` from the CALLER, so this
+    # cannot be centralized on shared_workflow's own repo variables — see note.)
+    inputs:
+      llm_url:
+        description: Override LLM endpoint. Empty = central default.
+        type: string
+        default: ""
+      llm_model:
+        description: Override model id. Empty = central default.
+        type: string
+        default: ""
+      llm_use_anthropic:
+        description: "'true' for Anthropic API, 'false' for OpenAI-compatible. Empty = central default."
+        type: string
+        default: ""
+    secrets:
+      OPENCODE_API_KEY:
+        required: true
+
+concurrency:
+  group: ocr-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    # Same-repo human PRs only. Fork PRs run without secrets under
+    # `pull_request` (so the token would be empty), and bot PRs (Dependabot)
+    # never need review — skip both, mirroring the CE review workflow.
+    if: >
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.user.type != 'Bot'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Validate token
+        env:
+          OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
+        run: |
+          if [[ -z "$OPENCODE_API_KEY" ]]; then
+            echo "::error::OPENCODE_API_KEY is required for same-repository human PRs"
+            exit 1
+          fi
+
+      - name: Load central model config
+        id: cfg
+        uses: ekawijayasusilo/shared_workflow/.github/actions/model-config@main
+
+      - name: Run open-code-review
+        uses: alibaba/open-code-review@f269d0ce00c3b9c178d7c5dc9021409a3e273cf1 # v1.9.7
+        with:
+          # Central default from .github/actions/model-config; a non-empty
+          # consumer override (vars.OCR_LLM_*) wins.
+          llm_url: ${{ inputs.llm_url != '' && inputs.llm_url || steps.cfg.outputs.ocr_llm_url }}
+          llm_auth_token: ${{ secrets.OPENCODE_API_KEY }}
+          llm_model: ${{ inputs.llm_model != '' && inputs.llm_model || steps.cfg.outputs.ocr_llm_model }}
+          llm_use_anthropic: ${{ inputs.llm_use_anthropic != '' && inputs.llm_use_anthropic || steps.cfg.outputs.ocr_llm_use_anthropic }}
+          # Re-run hygiene on subsequent pushes (synchronize): dedupe overlapping
+          # inline comments and update the summary in place instead of stacking.
+          incremental: "true"
+          sticky_summary: "true"

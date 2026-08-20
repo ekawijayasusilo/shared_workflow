@@ -10,7 +10,7 @@ Reference: Callers track `@main` — whatever is on `main` here is live in every
 | File | Purpose |
 | --- | --- |
 | `.github/workflows/opencode.reusable.yml` | Comment-triggered opencode assistant. Makes changes / answers when a comment contains `/oc` or `/opencode`. Needs write perms. |
-| `.github/workflows/opencode-review.reusable.yml` | Automatic PR reviewer. Triages each PR (report-only): complex/risky changes get a deep multi-agent review via the compound-engineering `ce-code-review` skill (`mode:agent`), simple ones a lean direct review; posts inline comments + a summary verdict. Skips draft, fork, and bot PRs. See [RFC 0001](docs/rfc/0001-opencode-review-ce-code-review-triage.md). |
+| `.github/workflows/ocr-review.reusable.yml` | Automatic PR reviewer (report-only). Runs [Alibaba open-code-review](https://github.com/alibaba/open-code-review) (`ocr`) — a hybrid deterministic + agent reviewer that bundles files into **concurrent** subagents; posts inline defect/security/perf comments + a sticky summary, with incremental re-run dedupe. Skips draft, fork, and bot PRs. Replaces the former `ce-code-review` reviewer (RFC 0001). See [RFC 0003](docs/rfc/0003-opencode-ocr-review-replacement.md). |
 | `.github/workflows/opencode-simplify.reusable.yml` | PR simplification suggester. Runs the compound-engineering `ce-simplify-code` skill on the PR diff (local-apply only — nothing is pushed) and posts the result as one COMMENT review with one-click ` ```suggestion ` blocks, max 10 total. Skips draft, fork, and bot PRs. See [RFC 0002](docs/rfc/0002-opencode-simplify-suggestions.md). |
 | `.github/workflows/opencode-doc-management.reusable.yml` | Scheduled docs maintainer. Runs opencode with the [compound-engineering plugin](https://github.com/EveryInc/compound-engineering-plugin) loaded (latest, via `OPENCODE_CONFIG_CONTENT`), syncs stale docs with recent code changes, and auto-opens a PR with the edits. Optional `prompt` input overrides the default task. |
 | `.github/workflows/claude.reusable.yml` | Claude Code assistant. Runs `anthropics/claude-code-action` when an issue/PR/comment/review mentions `@claude`. |
@@ -31,7 +31,7 @@ Ready-made stubs live in [`stubs/`](stubs/). Copy the one(s) you want into a con
 | Copy | calls | secret |
 | --- | --- | --- |
 | [`stubs/opencode.yml`](stubs/opencode.yml) | `opencode.reusable.yml` | `OPENCODE_API_KEY` |
-| [`stubs/opencode-review.yml`](stubs/opencode-review.yml) | `opencode-review.reusable.yml` | `OPENCODE_API_KEY` |
+| [`stubs/ocr-review.yml`](stubs/ocr-review.yml) | `ocr-review.reusable.yml` | `OPENCODE_API_KEY` |
 | [`stubs/opencode-simplify.yml`](stubs/opencode-simplify.yml) | `opencode-simplify.reusable.yml` | `OPENCODE_API_KEY` |
 | [`stubs/claude.yml`](stubs/claude.yml) | `claude.reusable.yml` | `CLAUDE_CODE_OAUTH_TOKEN` |
 
@@ -51,7 +51,7 @@ files sit in `stubs/`, not `.github/workflows/`, so they don't run here.)
 2. **Add the secrets** (`GITHUB_TOKEN` is automatic — never set it). Add only the ones whose
    stubs you copied:
    ```bash
-   gh secret set OPENCODE_API_KEY --repo OWNER/REPO        # opencode + opencode-review + opencode-simplify
+   gh secret set OPENCODE_API_KEY --repo OWNER/REPO        # opencode + ocr-review + opencode-simplify
    gh secret set CLAUDE_CODE_OAUTH_TOKEN --repo OWNER/REPO # claude
    ```
 3. Copy in the caller stub(s) above.
