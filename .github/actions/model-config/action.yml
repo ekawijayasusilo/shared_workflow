@@ -1,0 +1,44 @@
+name: model-config
+description: >-
+  Single source of truth for the AI workflow family's model/variant/plugin and
+  the ocr provider config. Edit config.json (next to this file) to change models
+  everywhere — every reusable workflow reads these outputs, and consumers track
+  @main, so one edit propagates without touching any consumer repo.
+
+outputs:
+  # opencode GitHub Action family (review, simplify, assistant)
+  opencode_model:
+    description: opencode model id.
+    value: ${{ steps.cfg.outputs.opencode_model }}
+  opencode_variant:
+    description: opencode reasoning variant.
+    value: ${{ steps.cfg.outputs.opencode_variant }}
+  opencode_plugin:
+    description: compound-engineering plugin spec for OPENCODE_CONFIG_CONTENT.
+    value: ${{ steps.cfg.outputs.opencode_plugin }}
+  # ocr (Alibaba open-code-review) — raw OpenAI-compatible provider
+  ocr_llm_url:
+    description: OpenAI-compatible endpoint for ocr.
+    value: ${{ steps.cfg.outputs.ocr_llm_url }}
+  ocr_llm_model:
+    description: Model id for ocr.
+    value: ${{ steps.cfg.outputs.ocr_llm_model }}
+  ocr_llm_use_anthropic:
+    description: "'true' for Anthropic API, 'false' for OpenAI-compatible."
+    value: ${{ steps.cfg.outputs.ocr_llm_use_anthropic }}
+
+runs:
+  using: composite
+  steps:
+    - id: cfg
+      shell: bash
+      run: |
+        CONFIG="$GITHUB_ACTION_PATH/config.json"
+        {
+          echo "opencode_model=$(jq -r '.opencode.model' "$CONFIG")"
+          echo "opencode_variant=$(jq -r '.opencode.variant' "$CONFIG")"
+          echo "opencode_plugin=$(jq -r '.opencode.plugin' "$CONFIG")"
+          echo "ocr_llm_url=$(jq -r '.ocr.llm_url' "$CONFIG")"
+          echo "ocr_llm_model=$(jq -r '.ocr.llm_model' "$CONFIG")"
+          echo "ocr_llm_use_anthropic=$(jq -r '.ocr.llm_use_anthropic' "$CONFIG")"
+        } >> "$GITHUB_OUTPUT"

@@ -8,6 +8,9 @@ on:
 
 jobs:
   opencode:
+    # Never react to bot-authored comments (avoids loops and
+    # wasted runs). The opencode action also gates on commenter permission.
+    if: github.event.comment.user.type != 'Bot'
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -20,6 +23,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v7
 
+      - name: Load central model config
+        id: cfg
+        uses: ekawijayasusilo/shared_workflow/.github/actions/model-config@main
+
       - name: Run opencode
         uses: anomalyco/opencode/github@31406ccc51b4bd2a4e1e086b2bcaa5f7f804f26d # v1.18.18
         env:
@@ -27,5 +34,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           use_github_token: true
-          model: opencode-go/deepseek-v4-pro
-          variant: max
+          model: ${{ steps.cfg.outputs.opencode_model }}
+          variant: ${{ steps.cfg.outputs.opencode_variant }}
