@@ -119,7 +119,15 @@ require both the workflow's `build` check and the configured Codecov project/pat
 
 ## Todo
 
-[ ] Migrate to renovate bot and create custom update rul to handle autoupdate on LLM model version, based on OpenCode model registry.
+[ ] Versioning via release-pleease & Github Release.
+[ ] Migrate to renovate bot and create custom update rule to handle autoupdate on LLM model version, based on OpenCode model registry.
 [ ] Create Github app for this repo (CodeDayCare) to enable named bot to post the code review & for security purposes (limited time repo write token instead of manual Github PAT setup on consumer repo secret).
 [ ] Reorganize proiject structure and abstract workflow & name better to decouple from real implementation (opencode, ocr).
 [ ] Support reasoning-effort/variant for ocr. Central config wires `variant` for the opencode workflows but ocr ignores it — ocr uses the model's default. To add: pass `llm_extra_body: {"reasoning_effort":"high|max"}` (deepseek-v4-pro accepts high/max on the opencode zen endpoint).
+
+## Future Workflow
+
+[ ] Autoheal workflow. Triggered upon linter/formatter/test job failure. Try to automatically fix it
+[ ] Auto Documentation workflow. Daily or upon release or upon merge to main, analyze the changes made, decide whether any claude.md or readme or documentation or test case scenarios need to be updated.
+[ ] Auto Issue Drafter workflow. Based on PR issue comment or PR body, if mentioning issue to be tracked in Github issue, then draft and triage the issue
+[ ] Auto Security Issue handler. Upon issue being raised by SAST / SCA in Github security, try check and resolve the issue, opening PR that update the dependency / resolve the issue.
