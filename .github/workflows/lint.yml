@@ -67,6 +67,10 @@ jobs:
             case "$package_name" in
               __renovate_allowlist_empty__)
                 ;;
+              *[!a-z0-9_]*|[!a-z]*)
+                echo "Allowlist entries must be exact pub package names: $package_name" >&2
+                exit 1
+                ;;
               bloc|flutter_bloc|bloc_test|bloc_lint|bloc_tools|firebase_*|widgetbook*|very_good_*)
                 echo "Grouped package must not be automerged via allowlist: $package_name" >&2
                 exit 1

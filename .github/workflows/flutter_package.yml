@@ -323,7 +323,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          dart pub global activate junitreport
+          dart pub global activate junitreport 2.0.2
 
           converted=0
           files=""
