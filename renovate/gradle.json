@@ -1,0 +1,13 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "packageRules": [
+    {
+      "description": "Keep Gradle dependency and wrapper updates manual",
+      "matchManagers": [
+        "gradle",
+        "gradle-wrapper"
+      ],
+      "automerge": false
+    }
+  ]
+}
