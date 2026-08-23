@@ -1,0 +1,65 @@
+name: License Check Workflow
+
+on:
+  workflow_call:
+    inputs:
+      working_directory:
+        required: false
+        type: string
+        default: "."
+      runs_on:
+        required: false
+        type: string
+        default: "ubuntu-latest"
+      dart_sdk:
+        required: false
+        type: string
+        default: "stable"
+      flutter_channel:
+        required: false
+        type: string
+        default: "stable"
+      flutter_version:
+        required: false
+        type: string
+        default: ""
+      allowed:
+        required: false
+        type: string
+        default: "MIT,BSD-3-Clause,BSD-2-Clause,Apache-2.0"
+      forbidden:
+        required: false
+        type: string
+        default: ""
+      skip_packages:
+        required: false
+        type: string
+        default: ""
+      dependency_type:
+        required: false
+        type: string
+        default: "direct-main,transitive"
+      ignore_retrieval_failures:
+        required: false
+        type: boolean
+        default: false
+    secrets:
+      ssh_key:
+        required: false
+
+jobs:
+  license-check:
+    uses: VeryGoodOpenSource/very_good_workflows/.github/workflows/license_check.yml@f053008378cc15a643a9050e67b0417bc548e7e8
+    with:
+      working_directory: ${{ inputs.working_directory }}
+      runs_on: ${{ inputs.runs_on }}
+      dart_sdk: ${{ inputs.dart_sdk }}
+      flutter_channel: ${{ inputs.flutter_channel }}
+      flutter_version: ${{ inputs.flutter_version }}
+      allowed: ${{ inputs.allowed }}
+      forbidden: ${{ inputs.forbidden }}
+      skip_packages: ${{ inputs.skip_packages }}
+      dependency_type: ${{ inputs.dependency_type }}
+      ignore_retrieval_failures: ${{ inputs.ignore_retrieval_failures }}
+    secrets:
+      ssh_key: ${{ secrets.ssh_key }}

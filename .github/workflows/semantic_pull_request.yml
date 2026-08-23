@@ -1,0 +1,18 @@
+name: Semantic Pull Request Workflow
+
+on:
+  workflow_call:
+    inputs:
+      types:
+        required: false
+        type: string
+      scopes:
+        required: false
+        type: string
+
+jobs:
+  semantic-pull-request:
+    uses: VeryGoodOpenSource/very_good_workflows/.github/workflows/semantic_pull_request.yml@f053008378cc15a643a9050e67b0417bc548e7e8
+    with:
+      types: ${{ inputs.types }}
+      scopes: ${{ inputs.scopes }}
