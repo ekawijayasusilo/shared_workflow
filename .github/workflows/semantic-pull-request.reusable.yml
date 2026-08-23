@@ -1,4 +1,4 @@
-name: Semantic Pull Request Workflow
+name: semantic-pull-request-reusable
 
 on:
   workflow_call:

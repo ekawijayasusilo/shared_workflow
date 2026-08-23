@@ -1,7 +1,7 @@
 # Forked from VeryGoodOpenSource/very_good_workflows at
 # f053008378cc15a643a9050e67b0417bc548e7e8.
 # Copyright (c) 2021 Very Good Ventures. Licensed under the MIT License.
-name: Flutter Package Workflow
+name: flutter-ci-reusable
 
 on:
   workflow_call:
@@ -262,7 +262,7 @@ jobs:
       - name: 📤 Upload Reports
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: flutter-package-reports-${{ github.run_id }}-${{ github.run_attempt }}
+          name: flutter-ci-reports-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{inputs.working_directory}}/shared-workflow-reports
           if-no-files-found: error
           retention-days: 1
@@ -281,7 +281,7 @@ jobs:
       - name: 📥 Download Reports
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: flutter-package-reports-${{ github.run_id }}-${{ github.run_attempt }}
+          name: flutter-ci-reports-${{ github.run_id }}-${{ github.run_attempt }}
           path: shared-workflow-reports
 
       - name: 📊 Upload Coverage (${{matrix.flag}})
@@ -314,7 +314,7 @@ jobs:
         continue-on-error: true
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: flutter-package-reports-${{ github.run_id }}-${{ github.run_attempt }}
+          name: flutter-ci-reports-${{ github.run_id }}-${{ github.run_attempt }}
           path: shared-workflow-reports
 
       - name: 🧪 Convert Test Reports

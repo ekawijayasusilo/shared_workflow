@@ -32,6 +32,26 @@ jobs:
             -ignore 'property "workflow_(repository|sha)" is not defined in object type' \
             .github/workflows/*.yml stubs/*.yml
 
+      - name: Check reusable workflow conventions
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          for workflow in .github/workflows/*.yml; do
+            if grep -qE '^[[:space:]]+workflow_call:' "$workflow" && [[ "$workflow" != *.reusable.yml ]]; then
+              echo "Reusable workflow must end with .reusable.yml: $workflow" >&2
+              exit 1
+            fi
+          done
+
+          for workflow in .github/workflows/*.reusable.yml; do
+            stub="stubs/$(basename "$workflow" .reusable.yml).yml"
+            if [[ ! -f "$stub" ]]; then
+              echo "Reusable workflow is missing its consumer stub: $stub" >&2
+              exit 1
+            fi
+          done
+
   renovate-config:
     runs-on: ubuntu-latest
     timeout-minutes: 10

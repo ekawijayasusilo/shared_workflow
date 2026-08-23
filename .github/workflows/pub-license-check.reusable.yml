@@ -1,4 +1,4 @@
-name: License Check Workflow
+name: pub-license-check-reusable
 
 on:
   workflow_call:
