@@ -11,7 +11,7 @@
         "/^\\.github\\/workflows\\/[^/]+\\.ya?ml$/"
       ],
       "matchStrings": [
-        "flutter_version\\s*:\\s*[\\\"']?(?<currentValue>\\d+\\.\\d+\\.\\d+)[\\\"']?"
+        "(?:^|\\n)[ \\t]*flutter_version\\s*:\\s*[\\\"']?(?<currentValue>\\d+\\.\\d+\\.\\d+)[\\\"']?"
       ],
       "depNameTemplate": "flutter",
       "datasourceTemplate": "flutter-version",
