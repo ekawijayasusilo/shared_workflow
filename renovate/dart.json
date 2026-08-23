@@ -20,20 +20,6 @@
       "automergeType": "pr"
     },
     {
-      "description": "Keep runtime and code-generation dependency updates manual",
-      "matchManagers": [
-        "pub"
-      ],
-      "matchPackageNames": [
-        "bloc",
-        "flutter_bloc",
-        "intl",
-        "build_runner",
-        "widgetbook_generator"
-      ],
-      "automerge": false
-    },
-    {
       "description": "Group the bloc package family for coordinated review",
       "matchManagers": [
         "pub"
