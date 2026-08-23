@@ -1,0 +1,375 @@
+# Forked from VeryGoodOpenSource/very_good_workflows at
+# f053008378cc15a643a9050e67b0417bc548e7e8.
+# Copyright (c) 2021 Very Good Ventures. Licensed under the MIT License.
+name: Flutter Package Workflow
+
+on:
+  workflow_call:
+    inputs:
+      analyze_directories:
+        required: false
+        type: string
+        default: "lib test"
+      collect_coverage_from:
+        required: false
+        type: string
+        default: "imports"
+        description: "Whether to collect coverage from imported files only or all files. Allowed values: imports, all."
+      concurrency:
+        required: false
+        type: number
+        default: 4
+      coverage_excludes:
+        required: false
+        type: string
+        default: ""
+        description: "Space-separated list of globs to exclude files from the coverage report (e.g. '**/*.g.dart **/gen/*.dart')."
+      dart_define:
+        required: false
+        type: string
+        default: ""
+        description: "Space-separated list of key-value pairs passed to the tests as --dart-define (e.g. 'dart.vm.product=true FLAVOR=staging')."
+      flutter_channel:
+        required: false
+        type: string
+        default: "stable"
+      flutter_version:
+        required: false
+        type: string
+        default: ""
+      format_directories:
+        required: false
+        type: string
+        default: "lib test"
+      format_line_length:
+        required: false
+        type: string
+      min_coverage:
+        required: false
+        type: number
+        default: 0
+      package_get_excludes:
+        required: false
+        type: string
+        default: "!*"
+      platform:
+        required: false
+        type: string
+        default: ""
+        description: "The platform to run tests on (e.g., 'chrome', 'android', 'ios')."
+      report_on:
+        required: false
+        type: string
+        default: "lib"
+      run_bloc_lint:
+        required: false
+        type: boolean
+        default: true
+      run_skipped:
+        required: false
+        type: boolean
+        default: false
+      runs_on:
+        required: false
+        type: string
+        default: "ubuntu-latest"
+      setup:
+        required: false
+        type: string
+        default: ""
+      show_uncovered:
+        required: false
+        type: boolean
+        default: true
+        description: "Whether to show uncovered lines when coverage is below 100%."
+      test_optimization:
+        required: false
+        type: boolean
+        default: true
+      test_recursion:
+        required: false
+        type: boolean
+        default: false
+      working_directory:
+        required: false
+        type: string
+        default: "."
+    secrets:
+      ssh_key:
+        required: false
+
+jobs:
+  validation:
+    outputs:
+      coverage_matrix: ${{ steps.discover_reports.outputs.coverage_matrix }}
+
+    defaults:
+      run:
+        working-directory: ${{inputs.working_directory}}
+
+    runs-on: ${{inputs.runs_on}}
+
+    steps:
+      - name: 📚 Git Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: 🐦 Setup Flutter
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: ${{inputs.flutter_version}}
+          channel: ${{inputs.flutter_channel}}
+          cache: true
+          cache-key: flutter-:os:-:channel:-:version:-:arch:-:hash:-${{ hashFiles('**/pubspec.lock') }}
+
+      - name: 🤫 Set SSH Key
+        env:
+          ssh_key: ${{secrets.ssh_key}}
+        if: env.ssh_key != null
+        uses: webfactory/ssh-agent@e83874834305fe9a4a2997156cb26c5de65a8555 # v0.10.0
+        with:
+          ssh-private-key: ${{secrets.ssh_key}}
+
+      - name: 📦 Install Dependencies
+        run: |
+          dart pub global activate very_good_cli 1.4.0
+          very_good packages get --recursive --ignore=${{inputs.package_get_excludes}}
+
+      - name: ⚙️ Run Setup
+        if: "${{inputs.setup != ''}}"
+        run: ${{inputs.setup}}
+
+      - name: ✨ Check Formatting
+        run: dart format ${{inputs.format_line_length && format('--line-length {0}', inputs.format_line_length) || ''}} --set-exit-if-changed ${{inputs.format_directories}}
+
+      - name: 🕵️ Analyze
+        run: flutter analyze ${{inputs.analyze_directories}}
+
+      - name: ✅ Bloc Lint
+        if: ${{inputs.run_bloc_lint}}
+        run: |
+          flutter pub global activate bloc_tools
+          bloc lint .
+
+      # Built in a bash step so the test command below stays shell-agnostic
+      # (Windows runners default to pwsh, which cannot parse bash loops).
+      - name: 🎯 Resolve Dart Defines
+        shell: bash
+        run: |
+          defines=""
+          for define in ${{inputs.dart_define}}; do
+            defines="$defines --dart-define=$define"
+          done
+          echo "dart_defines=$defines" >> "$GITHUB_ENV"
+
+      - name: 🧪 Run Tests
+        run: >-
+          very_good test
+          -j ${{inputs.concurrency}}
+          ${{(inputs.test_recursion && '--recursive') || ''}}
+          ${{(inputs.test_optimization && '--optimization') || '--no-optimization'}}
+          --coverage
+          --min-coverage ${{inputs.min_coverage}}
+          ${{inputs.coverage_excludes != '' && format('--exclude-coverage "{0}"', inputs.coverage_excludes) || ''}}
+          ${{format('--report-on "{0}"', inputs.report_on)}}
+          ${{inputs.collect_coverage_from != 'imports' && format('--collect-coverage-from {0}', inputs.collect_coverage_from) || ''}}
+          ${{inputs.show_uncovered && '--show-uncovered' || ''}}
+          ${{inputs.run_skipped && '--run-skipped' || ''}}
+          ${{inputs.platform != '' && format('--platform {0}', inputs.platform) || ''}}
+          ${{env.dart_defines}}
+          --test-randomize-ordering-seed random
+          --file-reporter=json:reports/tests.json
+
+      - name: 📊 Discover Reports
+        id: discover_reports
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          reports_dir="shared-workflow-reports"
+          rm -rf "$reports_dir"
+          mkdir -p "$reports_dir/coverage" "$reports_dir/test-results"
+
+          package_name() {
+            local package_dir="$1"
+            local pubspec="$package_dir/pubspec.yaml"
+
+            if [[ ! -f "$pubspec" ]]; then
+              echo "No pubspec.yaml found for package directory: $package_dir" >&2
+              return 1
+            fi
+
+            awk '
+              /^[[:space:]]*name:[[:space:]]*/ {
+                sub(/^[[:space:]]*name:[[:space:]]*/, "")
+                sub(/[[:space:]]*#.*/, "")
+                gsub(/[[:space:]]/, "")
+                print
+                exit
+              }
+            ' "$pubspec"
+          }
+
+          matrix='{"include":['
+          separator=""
+          coverage_count=0
+
+          while IFS= read -r lcov_file; do
+            package_dir="${lcov_file%/coverage/lcov.info}"
+            [[ -n "$package_dir" ]] || package_dir="."
+            flag="$(package_name "$package_dir")"
+
+            if [[ ! "$flag" =~ ^[A-Za-z0-9_.-]{1,45}$ ]]; then
+              echo "Invalid or missing Codecov flag '$flag' in $package_dir/pubspec.yaml" >&2
+              exit 1
+            fi
+
+            destination="$reports_dir/coverage/$flag/lcov.info"
+            if [[ -e "$destination" ]]; then
+              echo "Duplicate package name '$flag' would reuse a Codecov flag" >&2
+              exit 1
+            fi
+
+            mkdir -p "${destination%/*}"
+            cp "$lcov_file" "$destination"
+            matrix+="$separator{\"flag\":\"$flag\",\"file\":\"coverage/$flag/lcov.info\"}"
+            separator=","
+            coverage_count=$((coverage_count + 1))
+          done < <(find . -type f -path '*/coverage/lcov.info' -print | sort)
+
+          if [[ "$coverage_count" -eq 0 ]]; then
+            echo "No coverage/lcov.info reports were produced" >&2
+            exit 1
+          fi
+
+          while IFS= read -r json_file; do
+            package_dir="${json_file%/reports/tests.json}"
+            [[ -n "$package_dir" ]] || package_dir="."
+            flag="$(package_name "$package_dir")"
+
+            if [[ ! "$flag" =~ ^[A-Za-z0-9_.-]{1,45}$ ]]; then
+              echo "Skipping test report with invalid package name '$flag': $json_file" >&2
+              continue
+            fi
+
+            destination="$reports_dir/test-results/$flag/tests.json"
+            mkdir -p "${destination%/*}"
+            cp "$json_file" "$destination"
+          done < <(find . -type f -path '*/reports/tests.json' -print | sort)
+
+          matrix+=']}'
+          echo "coverage_matrix=$matrix" >> "$GITHUB_OUTPUT"
+
+      - name: 📤 Upload Reports
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: flutter-package-reports-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{inputs.working_directory}}/shared-workflow-reports
+          if-no-files-found: error
+          retention-days: 1
+
+  coverage:
+    needs: validation
+    runs-on: ${{inputs.runs_on}}
+    strategy:
+      fail-fast: false
+      matrix: ${{fromJSON(needs.validation.outputs.coverage_matrix)}}
+
+    steps:
+      - name: 📚 Git Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: 📥 Download Reports
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: flutter-package-reports-${{ github.run_id }}-${{ github.run_attempt }}
+          path: shared-workflow-reports
+
+      - name: 📊 Upload Coverage (${{matrix.flag}})
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+        with:
+          disable_search: true
+          fail_ci_if_error: true
+          files: shared-workflow-reports/${{matrix.file}}
+          flags: ${{matrix.flag}}
+
+  test_analytics:
+    needs: validation
+    runs-on: ${{inputs.runs_on}}
+
+    steps:
+      - name: 📚 Git Checkout
+        continue-on-error: true
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: 🐦 Setup Flutter
+        continue-on-error: true
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: ${{inputs.flutter_version}}
+          channel: ${{inputs.flutter_channel}}
+          cache: true
+          cache-key: flutter-:os:-:channel:-:version:-:arch:-:hash:-${{ hashFiles('**/pubspec.lock') }}
+
+      - name: 📥 Download Reports
+        continue-on-error: true
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: flutter-package-reports-${{ github.run_id }}-${{ github.run_attempt }}
+          path: shared-workflow-reports
+
+      - name: 🧪 Convert Test Reports
+        id: convert_test_reports
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+          dart pub global activate junitreport
+
+          converted=0
+          files=""
+          while IFS= read -r json_file; do
+            xml_file="${json_file%.json}.xml"
+            dart pub global run junitreport:tojunit \
+              --input "$json_file" \
+              --output "$xml_file"
+            converted=$((converted + 1))
+            files="${files:+$files,}$xml_file"
+          done < <(find shared-workflow-reports/test-results -type f -name tests.json -print | sort)
+
+          if [[ "$converted" -eq 0 ]]; then
+            echo "No JSON test reports were available for Test Analytics" >&2
+            exit 1
+          fi
+
+          echo "files=$files" >> "$GITHUB_OUTPUT"
+
+      - name: 📊 Upload Test Analytics
+        if: steps.convert_test_reports.outcome == 'success'
+        continue-on-error: true
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
+        with:
+          disable_search: true
+          fail_ci_if_error: false
+          files: ${{steps.convert_test_reports.outputs.files}}
+          handle_no_reports_found: true
+          report_type: test_results
+
+  build:
+    if: always()
+    needs:
+      - validation
+      - coverage
+      - test_analytics
+    runs-on: ${{inputs.runs_on}}
+
+    steps:
+      - name: Verify required jobs succeeded
+        env:
+          VALIDATION_RESULT: ${{needs.validation.result}}
+          COVERAGE_RESULT: ${{needs.coverage.result}}
+        shell: bash
+        run: |
+          if [[ "$VALIDATION_RESULT" != "success" || "$COVERAGE_RESULT" != "success" ]]; then
+            echo "Required job failed: validation=$VALIDATION_RESULT coverage=$COVERAGE_RESULT" >&2
+            exit 1
+          fi
