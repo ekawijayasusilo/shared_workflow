@@ -52,6 +52,19 @@ jobs:
             fi
           done
 
+          while IFS= read -r reference; do
+            reference="${reference%$'\r'}"
+            if [[ ! "$reference" =~ @v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+              echo "Shared workflow caller must use an exact release tag: $reference" >&2
+              exit 1
+            fi
+          done < <(
+            grep -RhoE \
+              "uses:[[:space:]]+['\"]?ekawijayasusilo/shared_workflow/[^[:space:]'\"]+" \
+              .github/workflows stubs \
+              | sed -E "s/^uses:[[:space:]]+['\"]?//"
+          )
+
   renovate-config:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -65,7 +78,24 @@ jobs:
           npx --yes --package renovate@44.39.2 -- \
             renovate-config-validator --strict renovate-runner.json
           npx --yes --package renovate@44.39.2 -- \
-            renovate-config-validator --strict --no-global renovate/*.json
+            renovate-config-validator --strict --no-global renovate.json renovate/*.json
+          jq -e '
+            .extends as $extends
+            | if ($extends | type) != "array" then
+                error("renovate.json extends must be an array")
+              elif (any($extends[];
+                test("^github>ekawijayasusilo/shared_workflow//renovate/default#v[0-9]+[.][0-9]+[.][0-9]+$")
+              ) | not) then
+                error("renovate.json must extend the exact-tagged shared default preset")
+              elif any($extends[];
+                test("^github>ekawijayasusilo/shared_workflow($|//|#)")
+                and (test("#v[0-9]+[.][0-9]+[.][0-9]+$") | not)
+              ) then
+                error("every shared_workflow hosted preset must use an exact release tag")
+              else
+                true
+              end
+          ' renovate.json > /dev/null
 
       - name: Reject grouped packages in the automerge allowlist
         shell: bash

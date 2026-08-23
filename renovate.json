@@ -1,0 +1,6 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "github>ekawijayasusilo/shared_workflow//renovate/default#v1.1.0"
+  ]
+}

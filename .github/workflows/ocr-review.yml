@@ -7,7 +7,7 @@ on:
 jobs:
   review:
     if: github.event.pull_request.draft == false
-    uses: ekawijayasusilo/shared_workflow/.github/workflows/ocr-review.reusable.yml@main
+    uses: ekawijayasusilo/shared_workflow/.github/workflows/ocr-review.reusable.yml@v1.1.0
     with:
       llm_url: ${{ vars.OCR_LLM_URL }}
       llm_model: ${{ vars.OCR_LLM_MODEL }}
