@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
@@ -27,4 +27,49 @@ jobs:
       # Stubs are caller templates consumers copy; they must lint clean too.
       - name: Lint workflows
         run: |
-          "$RUNNER_TEMP/bin/actionlint" .github/workflows/*.yml stubs/*.yml
+          # actionlint v1.7.12 does not yet model these documented reusable-workflow fields.
+          "$RUNNER_TEMP/bin/actionlint" \
+            -ignore 'property "workflow_(repository|sha)" is not defined in object type' \
+            .github/workflows/*.yml stubs/*.yml
+
+  renovate-config:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Validate Renovate configuration
+        run: |
+          npx --yes --package renovate@44.39.2 -- \
+            renovate-config-validator --strict renovate-runner.json
+          npx --yes --package renovate@44.39.2 -- \
+            renovate-config-validator --strict --no-global renovate/*.json
+
+      - name: Reject grouped packages in the automerge allowlist
+        shell: bash
+        run: |
+          package_names="$(
+            jq -er '
+              .packageRules as $rules
+              | if ($rules | type) != "array" then
+                  error("packageRules must be an array")
+                elif any($rules[]; (.matchPackageNames | type) != "array") then
+                  error("every package rule must contain a matchPackageNames array")
+                else
+                  [$rules[].matchPackageNames[]] | .[]
+                end
+            ' renovate/allowlist.json
+          )"
+
+          while IFS= read -r package_name; do
+            case "$package_name" in
+              __renovate_allowlist_empty__)
+                ;;
+              bloc|flutter_bloc|bloc_test|bloc_lint|bloc_tools|firebase_*|widgetbook*|very_good_*)
+                echo "Grouped package must not be automerged via allowlist: $package_name" >&2
+                exit 1
+                ;;
+            esac
+          done <<< "$package_names"
