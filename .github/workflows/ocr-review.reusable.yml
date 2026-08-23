@@ -62,9 +62,17 @@ jobs:
             exit 1
           fi
 
+      - name: Checkout invoked shared workflow assets
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .shared-workflow
+          persist-credentials: false
+
       - name: Load central model config
         id: cfg
-        uses: ekawijayasusilo/shared_workflow/.github/actions/model-config@main
+        uses: ./.shared-workflow/.github/actions/model-config
 
       - name: Run open-code-review
         uses: alibaba/open-code-review@f269d0ce00c3b9c178d7c5dc9021409a3e273cf1 # v1.9.7

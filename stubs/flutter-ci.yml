@@ -1,0 +1,13 @@
+name: flutter-ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  ci:
+    uses: ekawijayasusilo/shared_workflow/.github/workflows/flutter-ci.reusable.yml@main
+    with:
+      # Keep this exact so Renovate can update the SDK through the flutter preset.
+      flutter_version: "3.47.0"

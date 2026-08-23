@@ -1,0 +1,23 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "timezone": "Asia/Jakarta",
+  "schedule": [
+    "before 6am"
+  ],
+  "minimumReleaseAge": "7 days",
+  "dependencyDashboard": true,
+  "dependencyDashboardApproval": false,
+  "labels": [
+    "dependencies"
+  ],
+  "automergeStrategy": "squash",
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "minimumReleaseAge": null,
+    "automerge": false,
+    "labels": [
+      "security",
+      "dependencies"
+    ]
+  }
+}

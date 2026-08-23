@@ -1,0 +1,38 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "./dart"
+  ],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "Track exact Flutter versions in consumer workflows",
+      "managerFilePatterns": [
+        "/^\\.github\\/workflows\\/[^/]+\\.ya?ml$/"
+      ],
+      "matchStrings": [
+        "(?:^|\\n)[ \\t]*flutter_version\\s*:\\s*[\\\"']?(?<currentValue>\\d+\\.\\d+\\.\\d+)[\\\"']?"
+      ],
+      "depNameTemplate": "flutter",
+      "datasourceTemplate": "flutter-version",
+      "versioningTemplate": "semver"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Keep Dart and Flutter SDK updates manual",
+      "matchDatasources": [
+        "dart-version",
+        "flutter-version"
+      ],
+      "automerge": false
+    },
+    {
+      "description": "Do not age-gate Dart SDK updates because its datasource has no release timestamps",
+      "matchDatasources": [
+        "dart-version"
+      ],
+      "minimumReleaseAge": null
+    }
+  ]
+}

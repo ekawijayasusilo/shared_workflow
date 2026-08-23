@@ -1,0 +1,15 @@
+name: pub-license-check
+
+on:
+  pull_request:
+    paths:
+      - "**/pubspec.yaml"
+      - "**/pubspec.lock"
+      - ".github/workflows/pub-license-check.yml"
+
+jobs:
+  license-check:
+    uses: ekawijayasusilo/shared_workflow/.github/workflows/pub-license-check.reusable.yml@main
+    with:
+      # Remove this input in a Dart-only repo to use the dart_sdk input instead.
+      flutter_version: "3.47.0"

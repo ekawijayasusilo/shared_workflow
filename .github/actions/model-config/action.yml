@@ -2,8 +2,9 @@ name: model-config
 description: >-
   Single source of truth for the AI workflow family's model/variant/plugin and
   the ocr provider config. Edit config.json (next to this file) to change models
-  everywhere — every reusable workflow reads these outputs, and consumers track
-  @main, so one edit propagates without touching any consumer repo.
+  everywhere. Reusable workflows load this action from the exact revision that
+  defines the invoked workflow, so consumers receive the config from their
+  pinned shared_workflow release.
 
 outputs:
   # opencode GitHub Action family (review, simplify, assistant)

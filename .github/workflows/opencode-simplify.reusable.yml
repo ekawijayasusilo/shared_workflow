@@ -36,27 +36,35 @@ jobs:
 
       # PR head (not the detached merge ref) with full history, so the
       # ce-simplify-code skill can resolve its merge-base..HEAD scope (RFC 0002 §3.6).
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
           persist-credentials: false
 
+      - name: Checkout invoked shared workflow assets
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: .shared-workflow
+          persist-credentials: false
+
       # Prompts live in shared_workflow's prompts/, but this reusable workflow
       # runs in the caller's context (checkout above is the consumer repo), so
-      # the prompt is fetched at runtime. Fetched from main by design — callers
-      # track @main. $RUNNER_TEMP keeps the reviewed workspace clean.
+      # fetch the prompt from the exact revision that defined this job.
+      # $RUNNER_TEMP keeps the reviewed workspace clean.
       - name: Load prompt
         id: prompt
         run: |
           curl -fsSL --retry 3 --max-time 30 --connect-timeout 10 -o "$RUNNER_TEMP/prompt.md" \
-            https://raw.githubusercontent.com/ekawijayasusilo/shared_workflow/main/prompts/opencode-simplify.md
+            "https://raw.githubusercontent.com/${{ job.workflow_repository }}/${{ job.workflow_sha }}/prompts/opencode-simplify.md"
           test -s "$RUNNER_TEMP/prompt.md"
           { echo 'text<<PROMPT_EOF'; cat "$RUNNER_TEMP/prompt.md"; echo 'PROMPT_EOF'; } >> "$GITHUB_OUTPUT"
 
       - name: Load central model config
         id: cfg
-        uses: ekawijayasusilo/shared_workflow/.github/actions/model-config@main
+        uses: ./.shared-workflow/.github/actions/model-config
 
       - uses: anomalyco/opencode/github@31406ccc51b4bd2a4e1e086b2bcaa5f7f804f26d # v1.18.18
         env:
