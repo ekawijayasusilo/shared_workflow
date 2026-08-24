@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/ekawijayasusilo/shared_workflow/compare/v1.1.0...v1.1.1) (2026-08-24)
+
+
+### Bug Fixes
+
+* **flutter-ci:** wire optional Codecov token ([#29](https://github.com/ekawijayasusilo/shared_workflow/issues/29)) ([0e82397](https://github.com/ekawijayasusilo/shared_workflow/commit/0e82397c9b71d80b8075fad3218ba18e6cc2e870))
+
 ## [1.1.0](https://github.com/ekawijayasusilo/shared_workflow/compare/v1.0.0...v1.1.0) (2026-08-23)
 
 
