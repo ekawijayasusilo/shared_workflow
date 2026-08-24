@@ -95,6 +95,8 @@ on:
         type: string
         default: "."
     secrets:
+      CODECOV_TOKEN:
+        required: false
       ssh_key:
         required: false
 
@@ -291,6 +293,7 @@ jobs:
           fail_ci_if_error: true
           files: shared-workflow-reports/${{matrix.file}}
           flags: ${{matrix.flag}}
+          token: ${{secrets.CODECOV_TOKEN}}
 
   test_analytics:
     needs: validation
@@ -353,6 +356,7 @@ jobs:
           files: ${{steps.convert_test_reports.outputs.files}}
           handle_no_reports_found: true
           report_type: test_results
+          token: ${{secrets.CODECOV_TOKEN}}
 
   build:
     if: always()

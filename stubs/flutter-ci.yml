@@ -11,3 +11,5 @@ jobs:
     with:
       # Keep this exact so Renovate can update the SDK through the flutter preset.
       flutter_version: "3.47.0"
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
