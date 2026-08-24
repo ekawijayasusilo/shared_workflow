@@ -122,6 +122,17 @@ require both the workflow's `build` check and the configured Codecov project/pat
 Set `CODECOV_TOKEN` for every private repository. Public repositories also need it unless the
 Codecov account allows tokenless uploads for public repositories.
 
+The Flutter CI workflow also centralizes Dart Code Linter enforcement for pub workspaces:
+
+| Input | Type | Default | Purpose |
+| --- | --- | --- | --- |
+| `run_dart_code_linter` | boolean | `true` | Runs DCL analysis and unused code/file checks in the root package and every `workspace:` member with a `lib/` directory. The step skips cleanly when `dart_code_linter` is not resolved from the root package. |
+| `l10n_class_pattern` | string | `""` | When non-empty, runs the root package's unused-localization check with this generated localization class pattern. Unused-localization findings are non-fatal because Flutter's generated localization API contains permanent unused fixtures. |
+
+Add `dart_code_linter` to the root package's `dev_dependencies` to enable the gate for the
+whole workspace. Analysis warnings, style findings, performance findings, and metric threshold
+violations fail CI; unused code and unused files keep DCL's fatal default.
+
 ## Todo
 
 [x] Versioning via Release Please and GitHub Releases.

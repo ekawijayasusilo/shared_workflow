@@ -44,6 +44,10 @@ on:
       format_line_length:
         required: false
         type: string
+      l10n_class_pattern:
+        required: false
+        type: string
+        default: ""
       min_coverage:
         required: false
         type: number
@@ -62,6 +66,10 @@ on:
         type: string
         default: "lib"
       run_bloc_lint:
+        required: false
+        type: boolean
+        default: true
+      run_dart_code_linter:
         required: false
         type: boolean
         default: true
@@ -145,6 +153,113 @@ jobs:
 
       - name: 🕵️ Analyze
         run: flutter analyze ${{inputs.analyze_directories}}
+
+      - name: 🧹 Dart Code Linter
+        if: ${{inputs.run_dart_code_linter}}
+        shell: bash
+        env:
+          L10N_CLASS_PATTERN: ${{inputs.l10n_class_pattern}}
+        run: |
+          package_config=".dart_tool/package_config.json"
+          if [[ ! -f "$package_config" ]] ||
+            ! grep -Eq '"name"[[:space:]]*:[[:space:]]*"dart_code_linter"' "$package_config"; then
+            echo "dart_code_linter is not resolved from the workspace root; skipping DCL."
+            exit 0
+          fi
+
+          status=0
+          run_dcl() {
+            local package_dir="$1"
+            shift
+            if ! (
+              cd "$package_dir" || exit 1
+              dart run dart_code_linter:metrics "$@"
+            ); then
+              status=1
+            fi
+          }
+
+          workspace_members() {
+            local workspace_root="$1"
+            local pubspec="$workspace_root/pubspec.yaml"
+            [[ -f "$pubspec" ]] || return
+
+            while IFS= read -r workspace_entry; do
+              if [[ "$workspace_entry" == \"*\" || "$workspace_entry" == \'*\' ]]; then
+                workspace_entry="${workspace_entry:1:${#workspace_entry}-2}"
+              fi
+
+              local pattern="$workspace_entry"
+              [[ "$workspace_root" == "." ]] || pattern="$workspace_root/$pattern"
+
+              while IFS= read -r package_dir; do
+                [[ -f "$package_dir/pubspec.yaml" ]] || continue
+                printf '%s\n' "$package_dir"
+                workspace_members "$package_dir"
+              done < <(compgen -G "$pattern" || true)
+            done < <(
+              awk '
+                /^[[:space:]]*workspace:[[:space:]]*(#.*)?$/ {
+                  in_workspace = 1
+                  next
+                }
+                in_workspace && /^[^[:space:]#]/ {
+                  exit
+                }
+                in_workspace && /^[[:space:]]*-[[:space:]]*/ {
+                  workspace_entry = $0
+                  sub(/^[[:space:]]*-[[:space:]]*/, "", workspace_entry)
+                  sub(/[[:space:]]*#.*/, "", workspace_entry)
+                  gsub(/^[[:space:]]+|[[:space:]]+$/, "", workspace_entry)
+                  if (workspace_entry != "") {
+                    print workspace_entry
+                  }
+                }
+              ' "$pubspec"
+            )
+          }
+
+          workspace_packages() {
+            local workspace_json
+            if workspace_json="$(dart pub workspace list --json 2>/dev/null)" &&
+              jq -e '.packages | type == "array"' <<< "$workspace_json" >/dev/null; then
+              jq -r '.packages[].path' <<< "$workspace_json"
+              return
+            fi
+
+            echo "dart pub workspace list is unavailable; using pubspec.yaml discovery." >&2
+            {
+              printf '.\n'
+              workspace_members "."
+            } | awk '!seen[$0]++'
+          }
+
+          while IFS= read -r package_dir; do
+            package_dir="${package_dir%$'\r'}"
+            if [[ ! -d "$package_dir/lib" ]]; then
+              echo "Skipping DCL in $package_dir: no lib/ directory."
+              continue
+            fi
+
+            echo "Running DCL in $package_dir"
+            run_dcl "$package_dir" analyze lib \
+              --reporter=github \
+              --fatal-style --fatal-performance \
+              --set-exit-on-violation-level=warning
+            run_dcl "$package_dir" check-unused-code lib
+            run_dcl "$package_dir" check-unused-files lib
+          done < <(workspace_packages)
+
+          if [[ -n "$L10N_CLASS_PATTERN" ]]; then
+            if [[ ! -d lib ]]; then
+              echo "Skipping DCL unused l10n check: the root package has no lib/ directory."
+            else
+              run_dcl "." check-unused-l10n lib \
+                --class-pattern "$L10N_CLASS_PATTERN" --no-fatal-unused
+            fi
+          fi
+
+          exit "$status"
 
       - name: ✅ Bloc Lint
         if: ${{inputs.run_bloc_lint}}
