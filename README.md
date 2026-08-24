@@ -44,7 +44,7 @@ then update the workflow and preset references together in one dependency PR.
 | [`stubs/ocr-review.yml`](stubs/ocr-review.yml) | `ocr-review.reusable.yml` | `OPENCODE_API_KEY` |
 | [`stubs/opencode-simplify.yml`](stubs/opencode-simplify.yml) | `opencode-simplify.reusable.yml` | `OPENCODE_API_KEY` |
 | [`stubs/claude.yml`](stubs/claude.yml) | `claude.reusable.yml` | `CLAUDE_CODE_OAUTH_TOKEN` |
-| [`stubs/flutter-ci.yml`](stubs/flutter-ci.yml) | `flutter-ci.reusable.yml` | None |
+| [`stubs/flutter-ci.yml`](stubs/flutter-ci.yml) | `flutter-ci.reusable.yml` | `CODECOV_TOKEN` (optional for some public repositories) |
 | [`stubs/pub-license-check.yml`](stubs/pub-license-check.yml) | `pub-license-check.reusable.yml` | None |
 | [`stubs/semantic-pull-request.yml`](stubs/semantic-pull-request.yml) | `semantic-pull-request.reusable.yml` | None |
 
@@ -66,6 +66,7 @@ files sit in `stubs/`, not `.github/workflows/`, so they don't run here.)
    ```bash
    gh secret set OPENCODE_API_KEY --repo OWNER/REPO        # opencode + ocr-review + opencode-simplify
    gh secret set CLAUDE_CODE_OAUTH_TOKEN --repo OWNER/REPO # claude
+   gh secret set CODECOV_TOKEN --repo OWNER/REPO           # flutter-ci
    ```
 3. Copy in the caller stub(s) above.
 
@@ -118,6 +119,8 @@ Copyright (c) 2021 Very Good Ventures.
 Codecov is the coverage authority. The local minimum defaults to zero, coverage uploads use
 one flag per package, and Test Analytics is best-effort. Consumer branch protection should
 require both the workflow's `build` check and the configured Codecov project/patch statuses.
+Set `CODECOV_TOKEN` for every private repository. Public repositories also need it unless the
+Codecov account allows tokenless uploads for public repositories.
 
 ## Todo
 
