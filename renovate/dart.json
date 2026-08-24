@@ -5,6 +5,16 @@
   ],
   "packageRules": [
     {
+      "description": "Pin exact versions for registry-backed pub dependencies",
+      "matchManagers": [
+        "pub"
+      ],
+      "matchDatasources": [
+        "dart"
+      ],
+      "rangeStrategy": "pin"
+    },
+    {
       "description": "Automerge patch updates of analysis and test-only utilities",
       "matchManagers": [
         "pub"
