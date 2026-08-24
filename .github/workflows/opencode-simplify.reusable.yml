@@ -12,7 +12,7 @@ concurrency:
 
 jobs:
   simplify:
-    # Fork PRs and bot-authored PRs (e.g. Dependabot) run without repository
+    # Fork PRs and bot-authored PRs run without repository
     # secrets, so the action would start with no usable OPENCODE_API_KEY.
     if: >
       github.event.pull_request.draft == false &&
