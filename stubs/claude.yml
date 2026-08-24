@@ -17,6 +17,6 @@ jobs:
       (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
       (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude')) ||
       (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude')))
-    uses: ekawijayasusilo/shared_workflow/.github/workflows/claude.reusable.yml@main
+    uses: ekawijayasusilo/shared_workflow/.github/workflows/claude.reusable.yml@v1.1.0
     secrets:
       CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}

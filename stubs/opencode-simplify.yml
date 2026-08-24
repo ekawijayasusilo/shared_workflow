@@ -7,6 +7,6 @@ on:
 jobs:
   simplify:
     if: github.event.pull_request.draft == false
-    uses: ekawijayasusilo/shared_workflow/.github/workflows/opencode-simplify.reusable.yml@main
+    uses: ekawijayasusilo/shared_workflow/.github/workflows/opencode-simplify.reusable.yml@v1.1.0
     secrets:
       OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}

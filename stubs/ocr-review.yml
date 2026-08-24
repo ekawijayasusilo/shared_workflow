@@ -7,7 +7,7 @@ on:
 jobs:
   review:
     if: github.event.pull_request.draft == false
-    uses: ekawijayasusilo/shared_workflow/.github/workflows/ocr-review.reusable.yml@main
+    uses: ekawijayasusilo/shared_workflow/.github/workflows/ocr-review.reusable.yml@v1.1.0
     with:
       # Optional per-repo failover overrides. Set repo Variables OCR_LLM_URL /
       # OCR_LLM_MODEL in Settings to switch provider/model without editing a

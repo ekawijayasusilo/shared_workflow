@@ -7,7 +7,7 @@ on:
 
 jobs:
   ci:
-    uses: ekawijayasusilo/shared_workflow/.github/workflows/flutter-ci.reusable.yml@main
+    uses: ekawijayasusilo/shared_workflow/.github/workflows/flutter-ci.reusable.yml@v1.1.0
     with:
       # Keep this exact so Renovate can update the SDK through the flutter preset.
       flutter_version: "3.47.0"

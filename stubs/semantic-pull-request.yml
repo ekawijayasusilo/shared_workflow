@@ -6,4 +6,4 @@ on:
 
 jobs:
   semantic-pull-request:
-    uses: ekawijayasusilo/shared_workflow/.github/workflows/semantic-pull-request.reusable.yml@main
+    uses: ekawijayasusilo/shared_workflow/.github/workflows/semantic-pull-request.reusable.yml@v1.1.0

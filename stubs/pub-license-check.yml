@@ -9,7 +9,7 @@ on:
 
 jobs:
   license-check:
-    uses: ekawijayasusilo/shared_workflow/.github/workflows/pub-license-check.reusable.yml@main
+    uses: ekawijayasusilo/shared_workflow/.github/workflows/pub-license-check.reusable.yml@v1.1.0
     with:
       # Remove this input in a Dart-only repo to use the dart_sdk input instead.
       flutter_version: "3.47.0"
