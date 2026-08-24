@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.0](https://github.com/ekawijayasusilo/shared_workflow/compare/v1.1.1...v1.2.0) (2026-08-24)
+
+
+### Features
+
+* **renovate:** pin exact pub dependency versions ([#31](https://github.com/ekawijayasusilo/shared_workflow/issues/31)) ([d93d16f](https://github.com/ekawijayasusilo/shared_workflow/commit/d93d16f7ff6e59e93b4fde54e0d560f7f397cd2f))
+
 ## [1.1.1](https://github.com/ekawijayasusilo/shared_workflow/compare/v1.1.0...v1.1.1) (2026-08-24)
 
 
