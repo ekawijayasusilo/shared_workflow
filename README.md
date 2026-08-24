@@ -29,8 +29,8 @@ pinned to a release therefore cannot accidentally receive prompt or model behavi
 
 Direct third-party action references in owned workflows are SHA-pinned. The two thin VGV
 forwarders pin the complete upstream reusable workflow to an immutable commit, but inherit
-the third-party references used inside that upstream workflow. Dependabot remains active
-during bootstrap and will be removed only after Renovate succeeds against this repository.
+the third-party references used inside that upstream workflow. Renovate is the repository's
+sole dependency-update service.
 
 ## Caller stubs
 
@@ -122,7 +122,8 @@ require both the workflow's `build` check and the configured Codecov project/pat
 ## Todo
 
 [x] Versioning via Release Please and GitHub Releases.
-[ ] Migrate to renovate bot and create custom update rule to handle autoupdate on LLM model version, based on OpenCode model registry.
+[x] Migrate dependency updates from Dependabot to Renovate.
+[ ] Create a custom Renovate rule to update LLM model versions from the OpenCode model registry.
 [ ] Create Github app for this repo (CodeDayCare) to enable named bot to post the code review & for security purposes (limited time repo write token instead of manual Github PAT setup on consumer repo secret).
 [ ] Reorganize proiject structure and abstract workflow & name better to decouple from real implementation (opencode, ocr).
 [ ] Support reasoning-effort/variant for ocr. Central config wires `variant` for the opencode workflows but ocr ignores it — ocr uses the model's default. To add: pass `llm_extra_body: {"reasoning_effort":"high|max"}` (deepseek-v4-pro accepts high/max on the opencode zen endpoint).

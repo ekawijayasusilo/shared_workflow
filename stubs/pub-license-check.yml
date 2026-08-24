@@ -1,7 +1,20 @@
 name: pub-license-check
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   pull_request:
+    branches:
+      - main
+    paths:
+      - "**/pubspec.yaml"
+      - "**/pubspec.lock"
+      - ".github/workflows/pub-license-check.yml"
+  push:
+    branches:
+      - main
     paths:
       - "**/pubspec.yaml"
       - "**/pubspec.lock"
@@ -13,3 +26,6 @@ jobs:
     with:
       # Remove this input in a Dart-only repo to use the dart_sdk input instead.
       flutter_version: "3.47.0"
+      allowed: "MIT,BSD-3-Clause,BSD-2-Clause,Apache-2.0"
+      # Transitive via bloc_lint, but pub.dev reports its missing LICENSE as unknown.
+      skip_packages: "pubspec_lock_parse"

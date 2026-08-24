@@ -41,7 +41,7 @@ concurrency:
 jobs:
   review:
     # Same-repo human PRs only. Fork PRs run without secrets under
-    # `pull_request` (so the token would be empty), and bot PRs (Dependabot)
+    # `pull_request` (so the token would be empty), and bot-authored PRs
     # never need review — skip both, mirroring the CE review workflow.
     if: >
       github.event.pull_request.draft == false &&

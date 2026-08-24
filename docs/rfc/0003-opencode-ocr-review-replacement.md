@@ -98,7 +98,7 @@ with **incremental** re-run dedupe.
   simplification. So `ce-simplify-code` (RFC 0002) stays — the two occupy different lanes.
 - ocr's agent needs a **tool-calling** model.
 - `ocr_version` is intentionally **not pinned** (the wrapper installs the latest CLI); the
-  Action wrapper itself is SHA-pinned and Dependabot-tracked.
+  Action wrapper itself is SHA-pinned and Renovate-tracked.
 - **Runtime unknowns to confirm on first run:** (a) the opencode-zen `llm_url` shape
   (full `/chat/completions` path vs base — a wrong choice 404s), and (b) that the chosen
   `deepseek-v4-pro` exposes function-calling.
