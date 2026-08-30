@@ -75,7 +75,7 @@ jobs:
         uses: ./.shared-workflow/.github/actions/model-config
 
       - name: Run open-code-review
-        uses: alibaba/open-code-review@f269d0ce00c3b9c178d7c5dc9021409a3e273cf1 # v1.9.7
+        uses: alibaba/open-code-review@66120291271b2e605e420e9f11fbd6448f06163f # v1.9.10
         with:
           # Central default from .github/actions/model-config; a non-empty
           # consumer override (vars.OCR_LLM_*) wins.
